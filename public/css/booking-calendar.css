@@ -1,0 +1,715 @@
+/**
+ * Holiday Let Booking Calendar Styles
+ * Warm, inviting aesthetic with mobile-first design
+ */
+
+:root {
+    /* Warm earth tone palette */
+    --color-primary: #8B6F47;      /* Warm brown */
+    --color-primary-dark: #6B5436;
+    --color-secondary: #C19A6B;    /* Camel */
+    --color-accent: #D4A574;       /* Light sand */
+    --color-success: #7A9B76;      /* Sage green */
+    --color-danger: #B86B6B;       /* Terracotta */
+    
+    --color-bg: #FAF8F5;           /* Warm off-white */
+    --color-surface: #FFFFFF;
+    --color-text: #2C2416;         /* Dark brown */
+    --color-text-light: #6B5F4E;
+    --color-border: #E8DFD3;
+    
+    /* Typography */
+    --font-heading: 'Crimson Pro', Georgia, serif;
+    --font-body: 'Manrope', -apple-system, sans-serif;
+    
+    /* Spacing */
+    --space-xs: 0.5rem;
+    --space-sm: 1rem;
+    --space-md: 1.5rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(139, 111, 71, 0.08);
+    --shadow-md: 0 4px 16px rgba(139, 111, 71, 0.12);
+    --shadow-lg: 0 8px 32px rgba(139, 111, 71, 0.16);
+    
+    /* Border radius */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* WordPress Plugin Wrapper */
+.hlb-booking-wrapper {
+    font-family: var(--font-body);
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding: 20px 0;
+}
+
+.hlb-page-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==================== Header (Optional - for standalone pages) ==================== */
+.hlb-booking-header {
+    text-align: center;
+    padding: var(--space-xl) var(--space-md) var(--space-lg);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: var(--space-lg);
+}
+
+.hlb-booking-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+    opacity: 0.3;
+}
+
+.hlb-booking-header h1 {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+    position: relative;
+    letter-spacing: -0.02em;
+}
+
+.hlb-booking-header .subtitle {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    opacity: 0.95;
+    font-weight: 400;
+    position: relative;
+}
+
+/* ==================== Calendar Wrapper ==================== */
+.hlb-calendar-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0;
+    width: 100%;
+}
+
+/* ==================== Main Content ==================== */
+.hlb-booking-main {
+    flex: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--space-lg) 0;
+    width: 100%;
+}
+
+/* ==================== Messages ==================== */
+.hlb-booking-message {
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-lg);
+    font-weight: 500;
+    text-align: center;
+    animation: slideDown 0.4s ease-out;
+}
+
+.hlb-booking-message.hlb-success {
+    background: var(--color-success);
+    color: white;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ==================== Month Navigation ==================== */
+.hlb-month-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+    padding: var(--space-md);
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+}
+
+.hlb-month-selector {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.hlb-month-selector label {
+    font-weight: 500;
+    color: var(--color-text-light);
+    font-size: 0.9rem;
+}
+
+.hlb-month-selector select {
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: white;
+    color: var(--color-text);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hlb-month-selector select:hover {
+    border-color: var(--color-primary);
+}
+
+.hlb-month-selector select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(139, 111, 71, 0.1);
+}
+
+.hlb-month-arrows {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.hlb-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+}
+
+.hlb-arrow:hover {
+    background: var(--color-primary-dark);
+    transform: scale(1.1);
+}
+
+.hlb-arrow:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.hlb-arrow:active {
+    transform: scale(0.95);
+}
+
+/* ==================== Calendar Grid ==================== */
+.hlb-calendar-grid {
+    display: grid;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+}
+
+/* Mobile: stack calendars */
+@media (max-width: 767px) {
+    .hlb-calendar-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Tablet: 2 columns */
+@media (min-width: 768px) and (max-width: 1199px) {
+    .hlb-calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .hlb-calendar-month:last-child:nth-child(3n + 1) {
+        grid-column: 1 / -1;
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+    }
+}
+
+/* Desktop: 3 columns */
+@media (min-width: 1200px) {
+    .hlb-calendar-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ==================== Calendar Month ==================== */
+.hlb-calendar-month {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hlb-calendar-month:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.hlb-month-header {
+    padding: var(--space-md);
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-secondary) 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.hlb-month-header h2 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.hlb-season-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.hlb-season-badge.hlb-winter {
+    background: rgba(139, 111, 71, 0.2);
+    color: var(--color-primary-dark);
+}
+
+.hlb-season-badge.hlb-summer {
+    background: rgba(122, 155, 118, 0.2);
+    color: var(--color-success);
+}
+
+/* ==================== Calendar Table ==================== */
+.hlb-calendar-table {
+    padding: var(--space-md);
+}
+
+.hlb-weekday-headers {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: var(--space-sm);
+}
+
+.hlb-weekday {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 0;
+}
+
+.hlb-calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.hlb-calendar-day {
+    aspect-ratio: 1;
+    min-height: 60px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    position: relative;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.hlb-calendar-day.hlb-empty {
+    background: transparent;
+}
+
+.hlb-calendar-day.hlb-available {
+    background: var(--color-bg);
+    border-color: var(--color-border);
+    cursor: pointer;
+}
+
+.hlb-calendar-day.hlb-available:hover {
+    background: var(--color-accent);
+    border-color: var(--color-primary);
+    transform: scale(1.05);
+}
+
+.hlb-calendar-day.hlb-booked {
+    background: linear-gradient(135deg, var(--color-danger) 0%, #A55555 100%);
+    color: white;
+}
+
+.hlb-calendar-day.hlb-past {
+    background: #F5F5F5;
+    color: #999;
+    opacity: 0.6;
+}
+
+.hlb-day-number {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+}
+
+.hlb-day-price {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.hlb-calendar-day.hlb-booked .hlb-day-price {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.hlb-day-status {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ==================== Calendar Legend ==================== */
+.hlb-calendar-legend {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-lg);
+    padding: var(--space-md);
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+}
+
+.hlb-legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.hlb-legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-sm);
+    border: 2px solid transparent;
+}
+
+.hlb-legend-color.hlb-available {
+    background: var(--color-bg);
+    border-color: var(--color-border);
+}
+
+.hlb-legend-color.hlb-booked {
+    background: linear-gradient(135deg, var(--color-danger) 0%, #A55555 100%);
+}
+
+.hlb-legend-color.hlb-past {
+    background: #F5F5F5;
+    opacity: 0.6;
+}
+
+.hlb-legend-text {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+    font-weight: 500;
+}
+
+/* ==================== Booking Rules ==================== */
+.hlb-booking-rules {
+    padding: var(--space-md);
+    background: var(--color-bg);
+    border-top: 2px solid var(--color-border);
+}
+
+.hlb-booking-rules p {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+    line-height: 1.5;
+}
+
+.hlb-booking-rules strong {
+    color: var(--color-primary);
+}
+
+/* ==================== Booking Form ==================== */
+.hlb-booking-form-section {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-xl) var(--space-lg);
+    margin-top: var(--space-xl);
+}
+
+.hlb-form-header {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+.hlb-form-header h2 {
+    font-family: var(--font-heading);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    color: var(--color-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.hlb-form-header p {
+    color: var(--color-text-light);
+    font-size: 1.05rem;
+}
+
+.hlb-booking-form {
+    max-width: 700px;
+    margin: 0 auto var(--space-xl);
+}
+
+.hlb-form-row {
+    display: grid;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+@media (min-width: 768px) {
+    .hlb-form-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.hlb-form-group {
+    margin-bottom: var(--space-md);
+}
+
+.hlb-form-group label {
+    display: block;
+    margin-bottom: var(--space-xs);
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 0.95rem;
+}
+
+.hlb-form-group input,
+.hlb-form-group textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--color-text);
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.hlb-form-group input:focus,
+.hlb-form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(139, 111, 71, 0.1);
+}
+
+.hlb-checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    background: var(--color-bg);
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--color-border);
+    transition: all 0.2s ease;
+}
+
+.hlb-checkbox-group:hover {
+    border-color: var(--color-primary);
+}
+
+.hlb-checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.hlb-checkbox-group label {
+    margin: 0;
+    cursor: pointer;
+    flex: 1;
+}
+
+.hlb-additional-fee {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.hlb-submit-button {
+    width: 100%;
+    padding: 1.125rem 2rem;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 1.125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    box-shadow: var(--shadow-md);
+}
+
+.hlb-submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.hlb-submit-button:active {
+    transform: translateY(0);
+}
+
+.hlb-submit-button svg {
+    transition: transform 0.3s ease;
+}
+
+.hlb-submit-button:hover svg {
+    transform: translateX(4px);
+}
+
+/* ==================== Booking Info ==================== */
+.hlb-booking-info {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--color-primary);
+}
+
+.hlb-booking-info h3 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    margin-bottom: var(--space-md);
+}
+
+.hlb-booking-info ul {
+    list-style: none;
+}
+
+.hlb-booking-info li {
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-light);
+}
+
+.hlb-booking-info li:last-child {
+    border-bottom: none;
+}
+
+.hlb-booking-info strong {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+/* ==================== Footer ==================== */
+.hlb-booking-footer {
+    text-align: center;
+    padding: var(--space-lg);
+    background: var(--color-primary-dark);
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: var(--space-xl);
+}
+
+/* ==================== Responsive Adjustments ==================== */
+@media (max-width: 480px) {
+    .hlb-calendar-day {
+        min-height: 50px;
+        padding: 0.25rem;
+    }
+    
+    .hlb-day-number {
+        font-size: 0.85rem;
+    }
+    
+    .hlb-day-price {
+        font-size: 0.65rem;
+    }
+    
+    .hlb-weekday {
+        font-size: 0.7rem;
+        padding: 0.25rem 0;
+    }
+}
+
+/* ==================== Print Styles ==================== */
+@media print {
+    .hlb-month-navigation,
+    .hlb-booking-form-section,
+    .hlb-booking-footer {
+        display: none;
+    }
+    
+    .hlb-calendar-month {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+}
+
+/* ==================== WordPress Specific Styles ==================== */
+.hlb-booking-form-wrapper {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.hlb-form-header {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+.hlb-form-header h2 {
+    font-family: var(--font-heading);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    color: var(--color-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.hlb-form-header p {
+    color: var(--color-text-light);
+    font-size: 1.05rem;
+}
