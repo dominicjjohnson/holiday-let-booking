@@ -308,8 +308,8 @@
 }
 
 .hlb-season-badge.hlb-summer {
-    background: rgba(122, 155, 118, 0.2);
-    color: var(--color-success);
+    background: rgba(122, 155, 118, 0.15);
+    color: #9CBD98;
 }
 
 /* ==================== Calendar Table ==================== */
