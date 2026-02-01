@@ -181,9 +181,6 @@ class HLB_Calendar_Renderer {
                             echo '<span class="hlb-day-price">' . esc_html( hlb_format_price( $price ) ) . '</span>';
                         }
                         
-                        if ( $is_booked ) {
-                            echo '<span class="hlb-day-status">' . esc_html__( 'Booked', 'holiday-let-booking' ) . '</span>';
-                        }
                         
                         echo '</div>';
                     }
