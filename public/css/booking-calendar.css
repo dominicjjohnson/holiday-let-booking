@@ -320,8 +320,8 @@
 .hlb-weekday-headers {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-    margin-bottom: var(--space-sm);
+    gap: 4px;
+    margin-bottom: var(--space-xs);
 }
 
 .hlb-weekday {
@@ -342,8 +342,8 @@
 
 .hlb-calendar-day {
     aspect-ratio: 1;
-    min-height: 60px;
-    padding: 0.5rem;
+    min-height: 50px;
+    padding: 0.25rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -352,6 +352,7 @@
     position: relative;
     transition: all 0.2s ease;
     border: 2px solid transparent;
+    overflow: hidden;
 }
 
 .hlb-calendar-day.hlb-empty {

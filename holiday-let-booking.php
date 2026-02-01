@@ -3,7 +3,7 @@
  * Plugin Name: Holiday Let Booking Calendar
  * Plugin URI: https://miramedia.co.uk/plugins/holiday-let-booking
  * Description: Complete booking calendar system for holiday lets with seasonal pricing, Google Sheets integration, and email notifications.
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: Miramedia
  * Author URI: https://miramedia.co.uk
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'HLB_VERSION', '1.0.6' );
+define( 'HLB_VERSION', '1.0.7' );
 define( 'HLB_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HLB_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'HLB_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -333,6 +333,18 @@ function hlb_format_tier( $tier ) {
  * Helper function to get booked dates
  */
 function hlb_get_booked_dates( $start_date = null, $end_date = null ) {
+    $booked_dates = array();
+
+    // Get bookings from Google Sheets if enabled
+    if ( hlb_get_option( 'enable_google_sheets', false ) ) {
+        $sheets = new HLB_Google_Sheets();
+        $sheets_bookings = $sheets->get_booked_dates();
+        if ( ! empty( $sheets_bookings ) ) {
+            $booked_dates = array_merge( $booked_dates, $sheets_bookings );
+        }
+    }
+
+    // Also get bookings from WordPress posts
     $args = array(
         'post_type' => 'hlb_booking',
         'post_status' => array( 'publish', 'hlb-confirmed', 'hlb-paid' ),
@@ -341,7 +353,7 @@ function hlb_get_booked_dates( $start_date = null, $end_date = null ) {
             'relation' => 'AND',
         ),
     );
-    
+
     if ( $start_date ) {
         $args['meta_query'][] = array(
             'key' => '_hlb_check_out',
@@ -350,7 +362,7 @@ function hlb_get_booked_dates( $start_date = null, $end_date = null ) {
             'type' => 'DATE',
         );
     }
-    
+
     if ( $end_date ) {
         $args['meta_query'][] = array(
             'key' => '_hlb_check_in',
@@ -359,20 +371,19 @@ function hlb_get_booked_dates( $start_date = null, $end_date = null ) {
             'type' => 'DATE',
         );
     }
-    
+
     $bookings = get_posts( $args );
-    
-    $booked_dates = array();
+
     foreach ( $bookings as $booking ) {
         $check_in = get_post_meta( $booking->ID, '_hlb_check_in', true );
         $check_out = get_post_meta( $booking->ID, '_hlb_check_out', true );
-        
+
         if ( $check_in && $check_out ) {
             $dates = hlb_get_date_range( $check_in, $check_out );
             $booked_dates = array_merge( $booked_dates, $dates );
         }
     }
-    
+
     return array_unique( $booked_dates );
 }
 
