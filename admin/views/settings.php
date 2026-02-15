@@ -3,37 +3,106 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 if ( isset( $_POST['hlb_save_settings'] ) ) {
     check_admin_referer( 'hlb_settings' );
-    
+
     $fields = array(
-        'winter_months', 'cleaning_fee', 'dog_fee', 'currency_symbol',
+        'dog_fee', 'currency_symbol',
         'enable_google_sheets', 'google_api_key', 'google_sheet_id',
         'admin_email', 'from_email', 'from_name', 'enable_notifications',
         'check_in_time', 'check_out_time'
     );
-    
+
     foreach ( $fields as $field ) {
         if ( isset( $_POST[ 'hlb_' . $field ] ) ) {
             hlb_update_option( $field, sanitize_text_field( $_POST[ 'hlb_' . $field ] ) );
         }
     }
-    
+
+    // Save tier weekly rates
+    if ( isset( $_POST['hlb_tier_weekly_rates'] ) && is_array( $_POST['hlb_tier_weekly_rates'] ) ) {
+        $rates = array_map( 'floatval', $_POST['hlb_tier_weekly_rates'] );
+        hlb_update_option( 'tier_weekly_rates', $rates );
+    }
+
+    // Save stay type percentages
+    if ( isset( $_POST['hlb_stay_type_percentages'] ) && is_array( $_POST['hlb_stay_type_percentages'] ) ) {
+        $pcts = array_map( 'intval', $_POST['hlb_stay_type_percentages'] );
+        hlb_update_option( 'stay_type_percentages', $pcts );
+    }
+
+    // Clear pricing cache when settings change
+    delete_transient( 'hlb_sheets_pricing' );
+    delete_transient( 'hlb_sheets_tiers' );
+
     echo '<div class="notice notice-success"><p>' . __( 'Settings saved.', 'holiday-let-booking' ) . '</p></div>';
 }
+
+$tier_rates = hlb_get_option( 'tier_weekly_rates', array( 'low' => 835, 'medium' => 0, 'high' => 0, 'peak' => 0 ) );
+$stay_pcts = hlb_get_option( 'stay_type_percentages', array( 'mon_fri' => 60, 'fri_mon' => 65, 'fri_sun' => 60 ) );
 ?>
 
 <div class="wrap">
     <h1><?php _e( 'Holiday Let Booking Settings', 'holiday-let-booking' ); ?></h1>
-    
+
     <form method="post">
         <?php wp_nonce_field( 'hlb_settings' ); ?>
-        
+
         <table class="form-table">
             <tr>
-                <th colspan="2"><h2><?php _e( 'Pricing Settings', 'holiday-let-booking' ); ?></h2></th>
+                <th colspan="2"><h2><?php _e( 'Tier Weekly Rates', 'holiday-let-booking' ); ?></h2></th>
             </tr>
             <tr>
-                <th><label for="hlb_cleaning_fee"><?php _e( 'Winter Cleaning Fee', 'holiday-let-booking' ); ?></label></th>
-                <td><input type="number" id="hlb_cleaning_fee" name="hlb_cleaning_fee" value="<?php echo esc_attr( hlb_get_option( 'cleaning_fee', 150 ) ); ?>" step="0.01" class="regular-text"></td>
+                <th><label><?php _e( 'Low Season Weekly Rate', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <?php echo esc_html( hlb_get_option( 'currency_symbol', '£' ) ); ?>
+                    <input type="number" name="hlb_tier_weekly_rates[low]" value="<?php echo esc_attr( $tier_rates['low'] ?? 0 ); ?>" step="1" min="0" class="small-text">
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e( 'Medium Season Weekly Rate', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <?php echo esc_html( hlb_get_option( 'currency_symbol', '£' ) ); ?>
+                    <input type="number" name="hlb_tier_weekly_rates[medium]" value="<?php echo esc_attr( $tier_rates['medium'] ?? 0 ); ?>" step="1" min="0" class="small-text">
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e( 'High Season Weekly Rate', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <?php echo esc_html( hlb_get_option( 'currency_symbol', '£' ) ); ?>
+                    <input type="number" name="hlb_tier_weekly_rates[high]" value="<?php echo esc_attr( $tier_rates['high'] ?? 0 ); ?>" step="1" min="0" class="small-text">
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e( 'Peak Season Weekly Rate', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <?php echo esc_html( hlb_get_option( 'currency_symbol', '£' ) ); ?>
+                    <input type="number" name="hlb_tier_weekly_rates[peak]" value="<?php echo esc_attr( $tier_rates['peak'] ?? 0 ); ?>" step="1" min="0" class="small-text">
+                </td>
+            </tr>
+
+            <tr>
+                <th colspan="2"><h2><?php _e( 'Stay Type Pricing (% of Weekly Rate)', 'holiday-let-booking' ); ?></h2></th>
+            </tr>
+            <tr>
+                <th><label><?php _e( 'Mon-Fri (4 nights)', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <input type="number" name="hlb_stay_type_percentages[mon_fri]" value="<?php echo esc_attr( $stay_pcts['mon_fri'] ?? 60 ); ?>" min="0" max="100" class="small-text">%
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e( 'Fri-Mon (3 nights)', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <input type="number" name="hlb_stay_type_percentages[fri_mon]" value="<?php echo esc_attr( $stay_pcts['fri_mon'] ?? 65 ); ?>" min="0" max="100" class="small-text">%
+                </td>
+            </tr>
+            <tr>
+                <th><label><?php _e( 'Fri-Sun (2 nights)', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <input type="number" name="hlb_stay_type_percentages[fri_sun]" value="<?php echo esc_attr( $stay_pcts['fri_sun'] ?? 60 ); ?>" min="0" max="100" class="small-text">%
+                </td>
+            </tr>
+
+            <tr>
+                <th colspan="2"><h2><?php _e( 'Other Fees', 'holiday-let-booking' ); ?></h2></th>
             </tr>
             <tr>
                 <th><label for="hlb_dog_fee"><?php _e( 'Dog Fee', 'holiday-let-booking' ); ?></label></th>
@@ -43,7 +112,7 @@ if ( isset( $_POST['hlb_save_settings'] ) ) {
                 <th><label for="hlb_currency_symbol"><?php _e( 'Currency Symbol', 'holiday-let-booking' ); ?></label></th>
                 <td><input type="text" id="hlb_currency_symbol" name="hlb_currency_symbol" value="<?php echo esc_attr( hlb_get_option( 'currency_symbol', '£' ) ); ?>" class="small-text"></td>
             </tr>
-            
+
             <tr>
                 <th colspan="2"><h2><?php _e( 'Google Sheets Integration', 'holiday-let-booking' ); ?></h2></th>
             </tr>
@@ -51,7 +120,7 @@ if ( isset( $_POST['hlb_save_settings'] ) ) {
                 <th><label for="hlb_enable_google_sheets"><?php _e( 'Enable Google Sheets', 'holiday-let-booking' ); ?></label></th>
                 <td>
                     <input type="checkbox" id="hlb_enable_google_sheets" name="hlb_enable_google_sheets" value="1" <?php checked( hlb_get_option( 'enable_google_sheets', false ), 1 ); ?>>
-                    <p class="description"><?php _e( 'Sync pricing and bookings from Google Sheets', 'holiday-let-booking' ); ?></p>
+                    <p class="description"><?php _e( 'Sync tier assignments and bookings from Google Sheets. Sheet needs columns: Date | Tier (low, mid/medium, high, peak)', 'holiday-let-booking' ); ?></p>
                 </td>
             </tr>
             <tr>
@@ -62,7 +131,7 @@ if ( isset( $_POST['hlb_save_settings'] ) ) {
                 <th><label for="hlb_google_sheet_id"><?php _e( 'Google Sheet ID', 'holiday-let-booking' ); ?></label></th>
                 <td><input type="text" id="hlb_google_sheet_id" name="hlb_google_sheet_id" value="<?php echo esc_attr( hlb_get_option( 'google_sheet_id', '' ) ); ?>" class="large-text"></td>
             </tr>
-            
+
             <tr>
                 <th colspan="2"><h2><?php _e( 'Email Settings', 'holiday-let-booking' ); ?></h2></th>
             </tr>
@@ -82,7 +151,7 @@ if ( isset( $_POST['hlb_save_settings'] ) ) {
                 <th><label for="hlb_from_name"><?php _e( 'From Name', 'holiday-let-booking' ); ?></label></th>
                 <td><input type="text" id="hlb_from_name" name="hlb_from_name" value="<?php echo esc_attr( hlb_get_option( 'from_name', get_bloginfo( 'name' ) ) ); ?>" class="regular-text"></td>
             </tr>
-            
+
             <tr>
                 <th colspan="2"><h2><?php _e( 'Booking Settings', 'holiday-let-booking' ); ?></h2></th>
             </tr>
@@ -95,7 +164,7 @@ if ( isset( $_POST['hlb_save_settings'] ) ) {
                 <td><input type="time" id="hlb_check_out_time" name="hlb_check_out_time" value="<?php echo esc_attr( hlb_get_option( 'check_out_time', '10:00' ) ); ?>"></td>
             </tr>
         </table>
-        
+
         <?php submit_button( __( 'Save Settings', 'holiday-let-booking' ), 'primary', 'hlb_save_settings' ); ?>
     </form>
 </div>

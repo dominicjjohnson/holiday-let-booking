@@ -3,7 +3,7 @@
  * Plugin Name: Holiday Let Booking Calendar
  * Plugin URI: https://miramedia.co.uk/plugins/holiday-let-booking
  * Description: Complete booking calendar system for holiday lets with seasonal pricing, Google Sheets integration, and email notifications.
- * Version: 1.0.9
+ * Version: 2.0.1
  * Author: Miramedia
  * Author URI: https://miramedia.co.uk
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'HLB_VERSION', '1.0.9' );
+define( 'HLB_VERSION', '2.0.1' );
 define( 'HLB_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HLB_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'HLB_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -50,6 +50,7 @@ class Holiday_Let_Booking {
      */
     private function __construct() {
         $this->load_dependencies();
+        $this->maybe_upgrade();
         $this->init_hooks();
     }
     
@@ -126,6 +127,28 @@ class Holiday_Let_Booking {
         
         // Set default options
         $this->set_default_options();
+
+        // Clear old pricing cache
+        delete_transient( 'hlb_sheets_pricing' );
+        delete_transient( 'hlb_sheets_tiers' );
+        delete_transient( 'hlb_sheets_bookings' );
+
+        // v2.0 migration: force-set new pricing options if upgrading from v1
+        if ( false === get_option( 'hlb_tier_weekly_rates' ) ) {
+            update_option( 'hlb_tier_weekly_rates', array(
+                'low'    => 835,
+                'medium' => 0,
+                'high'   => 0,
+                'peak'   => 0,
+            ) );
+        }
+        if ( false === get_option( 'hlb_stay_type_percentages' ) ) {
+            update_option( 'hlb_stay_type_percentages', array(
+                'mon_fri' => 60,
+                'fri_mon' => 65,
+                'fri_sun' => 60,
+            ) );
+        }
         
         // Schedule cron jobs
         if ( ! wp_next_scheduled( 'hlb_daily_cleanup' ) ) {
@@ -144,6 +167,38 @@ class Holiday_Let_Booking {
         wp_clear_scheduled_hook( 'hlb_daily_cleanup' );
     }
     
+    /**
+     * Check for version upgrade and run migrations
+     */
+    private function maybe_upgrade() {
+        $installed_version = get_option( 'hlb_version', '0' );
+        if ( version_compare( $installed_version, HLB_VERSION, '<' ) ) {
+            // Clear all caches
+            delete_transient( 'hlb_sheets_pricing' );
+            delete_transient( 'hlb_sheets_tiers' );
+            delete_transient( 'hlb_sheets_bookings' );
+
+            // Ensure new options exist
+            if ( false === get_option( 'hlb_tier_weekly_rates' ) ) {
+                update_option( 'hlb_tier_weekly_rates', array(
+                    'low'    => 835,
+                    'medium' => 0,
+                    'high'   => 0,
+                    'peak'   => 0,
+                ) );
+            }
+            if ( false === get_option( 'hlb_stay_type_percentages' ) ) {
+                update_option( 'hlb_stay_type_percentages', array(
+                    'mon_fri' => 60,
+                    'fri_mon' => 65,
+                    'fri_sun' => 60,
+                ) );
+            }
+
+            update_option( 'hlb_version', HLB_VERSION );
+        }
+    }
+
     /**
      * Initialize plugin
      */
@@ -228,8 +283,6 @@ class Holiday_Let_Booking {
      */
     private function set_default_options() {
         $defaults = array(
-            'hlb_winter_months' => array( 1, 2, 3, 11, 12 ),
-            'hlb_cleaning_fee' => 150,
             'hlb_dog_fee' => 35,
             'hlb_currency_symbol' => '£',
             'hlb_date_format' => 'Y-m-d',
@@ -243,11 +296,18 @@ class Holiday_Let_Booking {
             'hlb_enable_notifications' => true,
             'hlb_check_in_time' => '15:00',
             'hlb_check_out_time' => '10:00',
-            'hlb_min_nights_summer' => 3,
-            'hlb_min_nights_winter' => 1,
-            'hlb_allowed_stay_lengths' => array( 3, 4, 7 ),
             'hlb_calendar_months_display' => 3,
-            'hlb_default_price_per_night' => 100,
+            'hlb_tier_weekly_rates' => array(
+                'low'    => 835,
+                'medium' => 0,
+                'high'   => 0,
+                'peak'   => 0,
+            ),
+            'hlb_stay_type_percentages' => array(
+                'mon_fri' => 60,
+                'fri_mon' => 65,
+                'fri_sun' => 60,
+            ),
         );
         
         foreach ( $defaults as $key => $value ) {
@@ -283,15 +343,6 @@ function hlb_update_option( $key, $value ) {
 }
 
 /**
- * Helper function to check if date is in winter period
- */
-function hlb_is_winter_period( $date ) {
-    $month = (int) date( 'n', is_numeric( $date ) ? $date : strtotime( $date ) );
-    $winter_months = hlb_get_option( 'winter_months', array( 1, 2, 3, 11, 12 ) );
-    return in_array( $month, $winter_months, true );
-}
-
-/**
  * Helper function to format price
  */
 function hlb_format_price( $amount ) {
@@ -300,32 +351,76 @@ function hlb_format_price( $amount ) {
 }
 
 /**
- * Get price for a tier name
- * Default tier prices can be overridden in settings
+ * Get weekly rate for a tier name
  */
-function hlb_get_tier_price( $tier ) {
-    $tier = strtolower( trim( $tier ) );
-
-    // Get tier prices from settings, with defaults
-    $tier_prices = hlb_get_option( 'tier_prices', array(
-        'low'    => 100,
-        'medium' => 150,
-        'high'   => 200,
-        'peak'   => 250,
+function hlb_get_tier_weekly_rate( $tier ) {
+    $tier = hlb_normalize_tier( $tier );
+    $rates = hlb_get_option( 'tier_weekly_rates', array(
+        'low'    => 835,
+        'medium' => 0,
+        'high'   => 0,
+        'peak'   => 0,
     ) );
-
-    return isset( $tier_prices[ $tier ] ) ? (float) $tier_prices[ $tier ] : null;
+    return isset( $rates[ $tier ] ) ? (float) $rates[ $tier ] : null;
 }
 
 /**
- * Format tier for display - converts tier to price or returns tier name
+ * Normalize tier name — handles aliases like "mid" => "medium"
+ */
+function hlb_normalize_tier( $tier ) {
+    $tier = strtolower( trim( $tier ) );
+    $aliases = array(
+        'mid' => 'medium',
+        'med' => 'medium',
+        'lo'  => 'low',
+        'hi'  => 'high',
+    );
+    return isset( $aliases[ $tier ] ) ? $aliases[ $tier ] : $tier;
+}
+
+/**
+ * Get stay type percentage as a decimal (e.g. 0.60)
+ */
+function hlb_get_stay_type_percentage( $stay_type ) {
+    $percentages = hlb_get_option( 'stay_type_percentages', array(
+        'mon_fri' => 60,
+        'fri_mon' => 65,
+        'fri_sun' => 60,
+    ) );
+    return isset( $percentages[ $stay_type ] ) ? (float) $percentages[ $stay_type ] / 100 : null;
+}
+
+/**
+ * Determine stay type from check-in day of week and number of nights
+ * Returns 'mon_fri', 'fri_mon', 'fri_sun', or null if invalid
+ */
+function hlb_determine_stay_type( $check_in_dow, $nights ) {
+    if ( $check_in_dow === 1 && $nights === 4 ) return 'mon_fri';
+    if ( $check_in_dow === 5 && $nights === 3 ) return 'fri_mon';
+    if ( $check_in_dow === 5 && $nights === 2 ) return 'fri_sun';
+    return null;
+}
+
+/**
+ * Get human-readable label for a stay type
+ */
+function hlb_get_stay_type_label( $stay_type ) {
+    $labels = array(
+        'mon_fri' => 'Mon-Fri (4 nights)',
+        'fri_mon' => 'Fri-Mon (3 nights)',
+        'fri_sun' => 'Fri-Sun (2 nights)',
+    );
+    return isset( $labels[ $stay_type ] ) ? $labels[ $stay_type ] : $stay_type;
+}
+
+/**
+ * Format tier for display - shows weekly rate or tier name
  */
 function hlb_format_tier( $tier ) {
-    $price = hlb_get_tier_price( $tier );
-    if ( $price !== null ) {
-        return hlb_format_price( $price );
+    $rate = hlb_get_tier_weekly_rate( $tier );
+    if ( $rate !== null && $rate > 0 ) {
+        return hlb_format_price( $rate ) . '/wk';
     }
-    // If no price mapping, just display the tier name
     return ucfirst( $tier );
 }
 
@@ -380,6 +475,8 @@ function hlb_get_booked_dates( $start_date = null, $end_date = null ) {
 
         if ( $check_in && $check_out ) {
             $dates = hlb_get_date_range( $check_in, $check_out );
+            // Exclude check-out day — guests leave that day, so it's available for new check-ins
+            array_pop( $dates );
             $booked_dates = array_merge( $booked_dates, $dates );
         }
     }
@@ -481,33 +578,36 @@ function hlb_debug_google_sheets() {
 
             $sheets = new HLB_Google_Sheets();
 
-            // Test pricing data
-            echo '<h4>Pricing Data</h4>';
-            $pricing = $sheets->get_pricing();
+            // Test tier data
+            echo '<h4>Tier Data</h4>';
+            $tiers = $sheets->get_tiers();
 
-            if ( empty( $pricing ) ) {
-                echo '<p style="color: red;">❌ No pricing data found. Check:</p>';
+            if ( empty( $tiers ) ) {
+                echo '<p style="color: red;">❌ No tier data found. Check:</p>';
                 echo '<ul>';
                 echo '<li>Sheet is public (Anyone with link can view)</li>';
                 echo '<li>Tab is named exactly "Prices"</li>';
-                echo '<li>Data format: Date | Tier | DisplayRate</li>';
+                echo '<li>Data format: Date | Tier (low, medium, high, peak)</li>';
                 echo '<li>API key has Google Sheets API enabled</li>';
                 echo '</ul>';
             } else {
-                echo '<p style="color: green;">✅ Found ' . count( $pricing ) . ' pricing entries</p>';
+                echo '<p style="color: green;">✅ Found ' . count( $tiers ) . ' tier entries</p>';
                 echo '<p><strong>Sample entries:</strong></p>';
                 echo '<table style="width: 100%; border-collapse: collapse;">';
                 echo '<tr style="background: #8B6F47; color: white;">';
                 echo '<th style="padding: 0.5rem; text-align: left;">Date</th>';
-                echo '<th style="padding: 0.5rem; text-align: left;">Price</th>';
+                echo '<th style="padding: 0.5rem; text-align: left;">Tier</th>';
+                echo '<th style="padding: 0.5rem; text-align: left;">Weekly Rate</th>';
                 echo '</tr>';
 
                 $count = 0;
-                foreach ( $pricing as $date => $price ) {
+                foreach ( $tiers as $date => $tier ) {
                     if ( $count++ >= 10 ) break;
+                    $weekly_rate = hlb_get_tier_weekly_rate( $tier );
                     echo '<tr style="border-bottom: 1px solid #ddd;">';
                     echo '<td style="padding: 0.5rem;">' . esc_html( $date ) . '</td>';
-                    echo '<td style="padding: 0.5rem;">£' . number_format( $price, 2 ) . '</td>';
+                    echo '<td style="padding: 0.5rem;">' . esc_html( ucfirst( $tier ) ) . '</td>';
+                    echo '<td style="padding: 0.5rem;">' . ( $weekly_rate ? hlb_format_price( $weekly_rate ) : 'N/A' ) . '</td>';
                     echo '</tr>';
                 }
                 echo '</table>';
@@ -524,15 +624,20 @@ function hlb_debug_google_sheets() {
                 echo '<p><strong>Sample dates:</strong> ' . implode( ', ', array_slice( $booked, 0, 10 ) ) . '</p>';
             }
 
-            // Test calendar rendering
-            echo '<h4>Calendar Price Display</h4>';
+            // Test calendar tier lookup
+            echo '<h4>Calendar Tier Lookup</h4>';
             $test_date = '2026-05-01';
-            $test_price = isset( $pricing[ $test_date ] ) ? $pricing[ $test_date ] : null;
+            $test_tier = isset( $tiers[ $test_date ] ) ? $tiers[ $test_date ] : null;
 
-            if ( $test_price ) {
-                echo '<p style="color: green;">✅ Pricing working! Test date ' . $test_date . ' = <strong>£' . number_format( $test_price, 2 ) . '</strong></p>';
+            if ( $test_tier ) {
+                $test_rate = hlb_get_tier_weekly_rate( $test_tier );
+                echo '<p style="color: green;">✅ Tier lookup working! Test date ' . $test_date . ' = <strong>' . esc_html( ucfirst( $test_tier ) ) . '</strong>';
+                if ( $test_rate ) {
+                    echo ' (' . hlb_format_price( $test_rate ) . '/wk)';
+                }
+                echo '</p>';
             } else {
-                echo '<p style="color: orange;">⚠️ No price found for test date ' . $test_date . '</p>';
+                echo '<p style="color: orange;">⚠️ No tier found for test date ' . $test_date . '</p>';
             }
             
             ?>

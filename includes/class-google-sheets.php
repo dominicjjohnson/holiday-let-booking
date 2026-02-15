@@ -18,22 +18,10 @@ class HLB_Google_Sheets {
     
     /**
      * Get pricing data from Google Sheets
+     * Now returns tier data (date => tier_name) instead of daily prices
      */
     public function get_pricing() {
-        $cache_key = 'hlb_sheets_pricing';
-        $cached = get_transient( $cache_key );
-        
-        if ( false !== $cached ) {
-            return $cached;
-        }
-        
-        $pricing = $this->fetch_pricing();
-        
-        if ( ! empty( $pricing ) ) {
-            set_transient( $cache_key, $pricing, $this->cache_time );
-        }
-        
-        return $pricing;
+        return $this->get_tiers();
     }
     
     /**
@@ -56,35 +44,6 @@ class HLB_Google_Sheets {
         return $bookings;
     }
     
-    /**
-     * Fetch pricing from Sheets API
-     * Returns array of date => price (from DisplayRate column C)
-     */
-    private function fetch_pricing() {
-        if ( empty( $this->api_key ) || empty( $this->sheet_id ) ) {
-            return array();
-        }
-
-        // Read columns A (Date), B (Tier), C (DisplayRate)
-        $range = 'Prices!A2:C1000';
-        $data = $this->fetch_sheet_data( $range );
-
-        $pricing = array();
-        if ( $data && isset( $data['values'] ) ) {
-            foreach ( $data['values'] as $row ) {
-                if ( count( $row ) >= 3 ) {
-                    $date = $this->parse_date( $row[0] );
-                    $price = (float) preg_replace( '/[^0-9.]/', '', $row[2] ); // Remove currency symbols
-                    if ( $date && $price > 0 ) {
-                        $pricing[ $date ] = $price;
-                    }
-                }
-            }
-        }
-
-        return $pricing;
-    }
-
     /**
      * Get tiers data from Sheets API
      * Returns array of date => tier_name
@@ -122,7 +81,7 @@ class HLB_Google_Sheets {
             foreach ( $data['values'] as $row ) {
                 if ( count( $row ) >= 2 ) {
                     $date = $this->parse_date( $row[0] );
-                    $tier = strtolower( trim( $row[1] ) );
+                    $tier = hlb_normalize_tier( $row[1] );
                     if ( $date && $tier ) {
                         $tiers[ $date ] = $tier;
                     }
@@ -141,14 +100,6 @@ class HLB_Google_Sheets {
         return isset( $tiers[ $date ] ) ? $tiers[ $date ] : null;
     }
 
-    /**
-     * Get price for a specific date
-     */
-    public function get_price_for_date( $date ) {
-        $pricing = $this->get_pricing();
-        return isset( $pricing[ $date ] ) ? $pricing[ $date ] : null;
-    }
-    
     /**
      * Fetch bookings from Sheets API
      */
@@ -170,6 +121,8 @@ class HLB_Google_Sheets {
                     
                     if ( ( $status === 'confirmed' || $status === 'paid' ) && $check_in && $check_out ) {
                         $dates = hlb_get_date_range( $check_in, $check_out );
+                        // Exclude check-out day — guests leave that day, so it's available for new check-ins
+                        array_pop( $dates );
                         $booked_dates = array_merge( $booked_dates, $dates );
                     }
                 }

@@ -25,16 +25,17 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
     <form id="hlb-booking-form" class="hlb-booking-form">
         <?php wp_nonce_field( 'hlb_booking_nonce', 'hlb_nonce' ); ?>
-        
+        <input type="hidden" id="hlb_stay_type" name="stay_type" value="">
+
         <div class="hlb-form-row">
             <div class="hlb-form-group">
                 <label for="hlb_check_in"><?php _e( 'Check-in Date', 'holiday-let-booking' ); ?> *</label>
-                <input type="date" id="hlb_check_in" name="check_in" required min="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>">
+                <input type="date" id="hlb_check_in" name="check_in" required readonly min="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>" placeholder="<?php esc_attr_e( 'Select from calendar', 'holiday-let-booking' ); ?>">
             </div>
 
             <div class="hlb-form-group">
                 <label for="hlb_check_out"><?php _e( 'Check-out Date', 'holiday-let-booking' ); ?> *</label>
-                <input type="date" id="hlb_check_out" name="check_out" required min="<?php echo esc_attr( date( 'Y-m-d', strtotime( '+1 day' ) ) ); ?>">
+                <input type="date" id="hlb_check_out" name="check_out" required readonly min="<?php echo esc_attr( date( 'Y-m-d', strtotime( '+1 day' ) ) ); ?>">
             </div>
         </div>
 

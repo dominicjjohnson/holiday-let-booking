@@ -29,7 +29,8 @@ class HLB_Meta_Boxes {
         $guest_phone = get_post_meta( $post->ID, '_hlb_guest_phone', true );
         $has_dog = get_post_meta( $post->ID, '_hlb_has_dog', true );
         $total_price = get_post_meta( $post->ID, '_hlb_total_price', true );
-        
+        $stay_type = get_post_meta( $post->ID, '_hlb_stay_type', true );
+
         ?>
         <table class="form-table">
             <tr>
@@ -40,6 +41,12 @@ class HLB_Meta_Boxes {
                 <th><label for="hlb_check_out"><?php _e( 'Check-out Date', 'holiday-let-booking' ); ?></label></th>
                 <td><input type="date" id="hlb_check_out" name="hlb_check_out" value="<?php echo esc_attr( $check_out ); ?>" class="regular-text"></td>
             </tr>
+            <?php if ( $stay_type ) : ?>
+            <tr>
+                <th><?php _e( 'Stay Type', 'holiday-let-booking' ); ?></th>
+                <td><?php echo esc_html( function_exists( 'hlb_get_stay_type_label' ) ? hlb_get_stay_type_label( $stay_type ) : $stay_type ); ?></td>
+            </tr>
+            <?php endif; ?>
             <tr>
                 <th><label for="hlb_guest_name"><?php _e( 'Guest Name', 'holiday-let-booking' ); ?></label></th>
                 <td><input type="text" id="hlb_guest_name" name="hlb_guest_name" value="<?php echo esc_attr( $guest_name ); ?>" class="regular-text"></td>

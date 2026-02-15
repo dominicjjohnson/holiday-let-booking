@@ -106,6 +106,15 @@ class HLB_Booking_Handler {
         $check_out = sanitize_text_field( $_POST['check_out'] ?? '' );
         $has_dog = isset( $_POST['has_dog'] ) && $_POST['has_dog'] === 'true';
 
+        // Allow stay_type parameter to auto-calculate check-out
+        if ( empty( $check_out ) && ! empty( $_POST['stay_type'] ) ) {
+            $stay_type = sanitize_text_field( $_POST['stay_type'] );
+            $nights_map = array( 'mon_fri' => 4, 'fri_mon' => 3, 'fri_sun' => 2 );
+            if ( isset( $nights_map[ $stay_type ] ) ) {
+                $check_out = date( 'Y-m-d', strtotime( $check_in . ' +' . $nights_map[ $stay_type ] . ' days' ) );
+            }
+        }
+
         if ( empty( $check_in ) || empty( $check_out ) ) {
             wp_send_json_error( array(
                 'message' => __( 'Please select dates.', 'holiday-let-booking' ),
@@ -118,7 +127,9 @@ class HLB_Booking_Handler {
     }
 
     /**
-     * Get price preview for check-in date (2, 3, 7 nights)
+     * Get price preview for check-in date
+     * Monday: shows Mon-Fri option
+     * Friday: shows Fri-Mon and Fri-Sun options
      */
     public static function ajax_get_price_preview() {
         check_ajax_referer( 'hlb_booking_nonce', 'nonce' );
@@ -132,38 +143,56 @@ class HLB_Booking_Handler {
         }
 
         $start = new DateTime( $check_in );
-        $day_of_week = (int) $start->format( 'N' ); // 1=Mon, 5=Fri, 7=Sun
-        $is_friday = ( $day_of_week === 5 );
+        $day_of_week = (int) $start->format( 'N' ); // 1=Mon, 5=Fri
 
-        // Get pricing data
-        $pricing = self::get_pricing_for_dates( $check_in, date( 'Y-m-d', strtotime( $check_in . ' +14 days' ) ) );
-
-        // Check if this is high/peak season (look at first date's tier from spreadsheet)
-        $is_high_season = false;
-        $tier = '';
+        // Get tier for this date
+        $tier = 'low';
         if ( hlb_get_option( 'enable_google_sheets', false ) ) {
             $sheets = new HLB_Google_Sheets();
-            $tier = $sheets->get_tier_for_date( $check_in );
-            $is_high_season = in_array( strtolower( $tier ), array( 'high', 'peak' ), true );
+            $sheet_tier = $sheets->get_tier_for_date( $check_in );
+            if ( $sheet_tier ) {
+                $tier = $sheet_tier;
+            }
         }
 
-        // Calculate prices for 2, 3, and 7 nights
-        $prices = array();
+        $weekly_rate = hlb_get_tier_weekly_rate( $tier );
+        $options = array();
 
-        foreach ( array( 2, 3, 7 ) as $nights ) {
-            $end_date = date( 'Y-m-d', strtotime( $check_in . ' +' . $nights . ' days' ) );
-            $price_data = self::calculate_price( $check_in, $end_date, false );
-            $prices[ $nights ] = $price_data['subtotal'];
+        if ( $day_of_week === 1 ) { // Monday
+            $pct = hlb_get_stay_type_percentage( 'mon_fri' );
+            $options[] = array(
+                'stay_type' => 'mon_fri',
+                'label'     => hlb_get_stay_type_label( 'mon_fri' ),
+                'nights'    => 4,
+                'price'     => round( $weekly_rate * $pct, 2 ),
+                'check_out' => date( 'Y-m-d', strtotime( $check_in . ' +4 days' ) ),
+            );
+        } elseif ( $day_of_week === 5 ) { // Friday
+            $pct3 = hlb_get_stay_type_percentage( 'fri_mon' );
+            $pct2 = hlb_get_stay_type_percentage( 'fri_sun' );
+            $options[] = array(
+                'stay_type' => 'fri_mon',
+                'label'     => hlb_get_stay_type_label( 'fri_mon' ),
+                'nights'    => 3,
+                'price'     => round( $weekly_rate * $pct3, 2 ),
+                'check_out' => date( 'Y-m-d', strtotime( $check_in . ' +3 days' ) ),
+            );
+            $options[] = array(
+                'stay_type' => 'fri_sun',
+                'label'     => hlb_get_stay_type_label( 'fri_sun' ),
+                'nights'    => 2,
+                'price'     => round( $weekly_rate * $pct2, 2 ),
+                'check_out' => date( 'Y-m-d', strtotime( $check_in . ' +2 days' ) ),
+            );
         }
 
         wp_send_json_success( array(
-            'check_in'       => $check_in,
-            'day_of_week'    => $day_of_week,
-            'is_friday'      => $is_friday,
-            'is_high_season' => $is_high_season,
-            'tier'           => $tier,
-            'prices'         => $prices,
-            'currency'       => hlb_get_option( 'currency_symbol', '£' ),
+            'check_in'    => $check_in,
+            'day_of_week' => $day_of_week,
+            'tier'        => $tier,
+            'weekly_rate' => $weekly_rate,
+            'options'     => $options,
+            'currency'    => hlb_get_option( 'currency_symbol', '£' ),
         ) );
     }
     
@@ -193,83 +222,60 @@ class HLB_Booking_Handler {
     }
     
     /**
-     * Calculate booking price
+     * Calculate booking price using tier-based percentage model
      */
     public static function calculate_price( $check_in, $check_out, $has_dog = false ) {
         $start = new DateTime( $check_in );
         $end = new DateTime( $check_out );
         $nights = $start->diff( $end )->days;
-        $month = (int) $start->format( 'n' );
-        
-        $is_winter = hlb_is_winter_period( $check_in );
-        
-        // Get pricing (from Google Sheets or database)
-        $pricing = self::get_pricing_for_dates( $check_in, $check_out );
-        
-        $subtotal = 0;
-        $current = clone $start;
-        
-        while ( $current < $end ) {
-            $date_str = $current->format( 'Y-m-d' );
-            $daily_price = isset( $pricing[ $date_str ] ) ? $pricing[ $date_str ] : hlb_get_option( 'default_price_per_night', 100 );
-            $subtotal += $daily_price;
-            $current->modify( '+1 day' );
+        $day_of_week = (int) $start->format( 'N' );
+
+        // Determine stay type
+        $stay_type = hlb_determine_stay_type( $day_of_week, $nights );
+        if ( ! $stay_type ) {
+            return array(
+                'subtotal'    => 0,
+                'dog_fee'     => 0,
+                'total'       => 0,
+                'nights'      => $nights,
+                'stay_type'   => null,
+                'tier'        => null,
+                'weekly_rate' => 0,
+                'percentage'  => 0,
+                'error'       => __( 'Invalid stay type.', 'holiday-let-booking' ),
+            );
         }
-        
-        // Add cleaning fee for winter
-        $cleaning_fee = 0;
-        if ( $is_winter ) {
-            $cleaning_fee = hlb_get_option( 'cleaning_fee', 150 );
-        }
-        
-        // Add dog fee
-        $dog_fee = 0;
-        if ( $has_dog ) {
-            $dog_fee = hlb_get_option( 'dog_fee', 35 );
-        }
-        
-        $total = $subtotal + $cleaning_fee + $dog_fee;
-        
-        return array(
-            'subtotal'      => $subtotal,
-            'cleaning_fee'  => $cleaning_fee,
-            'dog_fee'       => $dog_fee,
-            'total'         => $total,
-            'nights'        => $nights,
-            'is_winter'     => $is_winter,
-            'per_night_avg' => $nights > 0 ? round( $subtotal / $nights, 2 ) : 0,
-        );
-    }
-    
-    /**
-     * Get pricing for date range
-     */
-    private static function get_pricing_for_dates( $start, $end ) {
-        // Check if Google Sheets is enabled
+
+        // Get tier for check-in date
+        $tier = 'low';
         if ( hlb_get_option( 'enable_google_sheets', false ) ) {
             $sheets = new HLB_Google_Sheets();
-            $pricing = $sheets->get_pricing();
-            if ( ! empty( $pricing ) ) {
-                return $pricing;
+            $sheet_tier = $sheets->get_tier_for_date( $check_in );
+            if ( $sheet_tier ) {
+                $tier = $sheet_tier;
             }
         }
-        
-        // Fallback to database pricing
-        global $wpdb;
-        $table = $wpdb->prefix . 'hlb_pricing';
-        
-        $results = $wpdb->get_results( $wpdb->prepare(
-            "SELECT price_date, price FROM {$table} WHERE price_date >= %s AND price_date <= %s AND is_available = 1",
-            $start,
-            $end
-        ), OBJECT_K );
-        
-        $pricing = array();
-        foreach ( $results as $date => $row ) {
-            $pricing[ $date ] = (float) $row->price;
-        }
-        
-        return $pricing;
+
+        // Calculate price: weekly_rate * percentage
+        $weekly_rate = hlb_get_tier_weekly_rate( $tier );
+        $percentage = hlb_get_stay_type_percentage( $stay_type );
+        $subtotal = round( $weekly_rate * $percentage, 2 );
+
+        // Dog fee
+        $dog_fee = $has_dog ? (float) hlb_get_option( 'dog_fee', 35 ) : 0;
+        $total = $subtotal + $dog_fee;
+
+        return array(
+            'subtotal'    => $subtotal,
+            'dog_fee'     => $dog_fee,
+            'total'       => $total,
+            'nights'      => $nights,
+            'stay_type'   => $stay_type,
+            'stay_label'  => hlb_get_stay_type_label( $stay_type ),
+            'tier'        => $tier,
+            'weekly_rate' => $weekly_rate,
+            'percentage'  => $percentage * 100,
+        );
     }
     
     /**
@@ -289,64 +295,23 @@ class HLB_Booking_Handler {
     }
     
     /**
-     * Validate booking rules (3/4/7 nights for summer, etc.)
+     * Validate booking rules — only Mon-Fri (4n), Fri-Mon (3n), Fri-Sun (2n)
      */
     private static function validate_booking_rules( $check_in, $check_out ) {
         $start = new DateTime( $check_in );
         $end = new DateTime( $check_out );
         $nights = $start->diff( $end )->days;
-        $is_winter = hlb_is_winter_period( $check_in );
-        
-        if ( $is_winter ) {
-            // Winter: minimum nights check
-            $min_nights = hlb_get_option( 'min_nights_winter', 1 );
-            if ( $nights < $min_nights ) {
-                return new WP_Error(
-                    'invalid_nights',
-                    sprintf(
-                        __( 'Winter bookings must be at least %d night(s).', 'holiday-let-booking' ),
-                        $min_nights
-                    )
-                );
-            }
-        } else {
-            // Summer: must be 3, 4, or 7 nights
-            $allowed_lengths = hlb_get_option( 'allowed_stay_lengths', array( 3, 4, 7 ) );
-            if ( ! in_array( $nights, $allowed_lengths, true ) ) {
-                return new WP_Error(
-                    'invalid_nights',
-                    sprintf(
-                        __( 'Summer bookings must be %s nights.', 'holiday-let-booking' ),
-                        implode( ', ', $allowed_lengths )
-                    )
-                );
-            }
-            
-            // Check day of week rules (Friday-Monday or Monday-Friday)
-            $check_in_day = (int) $start->format( 'N' ); // 1 = Monday, 5 = Friday
-            
-            if ( $nights === 3 && $check_in_day !== 5 ) {
-                return new WP_Error(
-                    'invalid_day',
-                    __( '3-night stays must start on Friday.', 'holiday-let-booking' )
-                );
-            }
-            
-            if ( $nights === 4 && $check_in_day !== 1 ) {
-                return new WP_Error(
-                    'invalid_day',
-                    __( '4-night stays must start on Monday.', 'holiday-let-booking' )
-                );
-            }
-            
-            if ( $nights === 7 && ! in_array( $check_in_day, array( 1, 5 ), true ) ) {
-                return new WP_Error(
-                    'invalid_day',
-                    __( 'Weekly stays must start on Monday or Friday.', 'holiday-let-booking' )
-                );
-            }
+        $day_of_week = (int) $start->format( 'N' );
+
+        $stay_type = hlb_determine_stay_type( $day_of_week, $nights );
+
+        if ( ! $stay_type ) {
+            return new WP_Error(
+                'invalid_stay',
+                __( 'Only the following stay types are available: Mon-Fri (4 nights), Fri-Mon (3 nights), or Fri-Sun (2 nights). Check in on Mondays or Fridays only.', 'holiday-let-booking' )
+            );
         }
-        
+
         return true;
     }
     
@@ -382,6 +347,9 @@ class HLB_Booking_Handler {
         update_post_meta( $post_id, '_hlb_total_price', $data['total_price'] );
         update_post_meta( $post_id, '_hlb_price_breakdown', $data['price_breakdown'] );
         update_post_meta( $post_id, '_hlb_booking_date', current_time( 'mysql' ) );
+        if ( isset( $data['price_breakdown']['stay_type'] ) ) {
+            update_post_meta( $post_id, '_hlb_stay_type', $data['price_breakdown']['stay_type'] );
+        }
         
         return $post_id;
     }

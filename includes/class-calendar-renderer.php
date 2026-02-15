@@ -121,23 +121,19 @@ class HLB_Calendar_Renderer {
     /**
      * Render a single month
      */
-    private static function render_month( $month_data, $booked_dates, $pricing ) {
+    private static function render_month( $month_data, $booked_dates, $tiers ) {
         $month = $month_data['month'];
         $year = $month_data['year'];
         $first_day = mktime( 0, 0, 0, $month, 1, $year );
         $days_in_month = (int) date( 't', $first_day );
         $day_of_week = (int) date( 'w', $first_day );
-        $is_winter = hlb_is_winter_period( $first_day );
-        
+
         ?>
         <article class="hlb-calendar-month">
             <header class="hlb-month-header">
                 <h3><?php echo esc_html( $month_data['name'] ); ?></h3>
-                <span class="hlb-season-badge hlb-<?php echo $is_winter ? 'winter' : 'summer'; ?>">
-                    <?php echo $is_winter ? esc_html__( 'Winter Rates', 'holiday-let-booking' ) : esc_html__( 'Summer Stays', 'holiday-let-booking' ); ?>
-                </span>
             </header>
-            
+
             <div class="hlb-calendar-table">
                 <div class="hlb-weekday-headers">
                     <div class="hlb-weekday"><?php esc_html_e( 'Sun', 'holiday-let-booking' ); ?></div>
@@ -148,21 +144,23 @@ class HLB_Calendar_Renderer {
                     <div class="hlb-weekday"><?php esc_html_e( 'Fri', 'holiday-let-booking' ); ?></div>
                     <div class="hlb-weekday"><?php esc_html_e( 'Sat', 'holiday-let-booking' ); ?></div>
                 </div>
-                
+
                 <div class="hlb-calendar-days">
                     <?php
                     // Empty cells before first day
                     for ( $i = 0; $i < $day_of_week; $i++ ) {
                         echo '<div class="hlb-calendar-day hlb-empty"></div>';
                     }
-                    
+
                     // Days of month
                     for ( $day = 1; $day <= $days_in_month; $day++ ) {
                         $date = sprintf( '%04d-%02d-%02d', $year, $month, $day );
                         $is_booked = in_array( $date, $booked_dates, true );
-                        $price = isset( $pricing[ $date ] ) ? $pricing[ $date ] : null;
                         $is_past = strtotime( $date ) < strtotime( 'today' );
-                        
+                        $dow = (int) date( 'N', strtotime( $date ) ); // 1=Mon, 5=Fri
+                        $is_start_day = ( $dow === 1 || $dow === 5 );
+                        $tier = isset( $tiers[ $date ] ) ? $tiers[ $date ] : 'low';
+
                         $classes = array( 'hlb-calendar-day' );
                         if ( $is_booked ) {
                             $classes[] = 'hlb-booked';
@@ -172,19 +170,55 @@ class HLB_Calendar_Renderer {
                         }
                         if ( ! $is_booked && ! $is_past ) {
                             $classes[] = 'hlb-available';
+                            if ( $is_start_day ) {
+                                $classes[] = 'hlb-start-day';
+                            } else {
+                                $classes[] = 'hlb-non-start';
+                            }
                         }
-                        
-                        echo '<div class="' . esc_attr( implode( ' ', $classes ) ) . '" data-date="' . esc_attr( $date ) . '">';
+
+                        // Build data attributes
+                        $data_attrs = ' data-date="' . esc_attr( $date ) . '"';
+
+                        // Add hover price data for start days
+                        if ( $is_start_day && $tier && ! $is_past && ! $is_booked ) {
+                            $weekly_rate = hlb_get_tier_weekly_rate( $tier );
+                            if ( $weekly_rate && $weekly_rate > 0 ) {
+                                $hover_prices = array();
+                                if ( $dow === 1 ) {
+                                    $hover_prices[] = array(
+                                        'label' => hlb_get_stay_type_label( 'mon_fri' ),
+                                        'price' => round( $weekly_rate * hlb_get_stay_type_percentage( 'mon_fri' ), 2 ),
+                                    );
+                                } elseif ( $dow === 5 ) {
+                                    $hover_prices[] = array(
+                                        'label' => hlb_get_stay_type_label( 'fri_mon' ),
+                                        'price' => round( $weekly_rate * hlb_get_stay_type_percentage( 'fri_mon' ), 2 ),
+                                    );
+                                    $hover_prices[] = array(
+                                        'label' => hlb_get_stay_type_label( 'fri_sun' ),
+                                        'price' => round( $weekly_rate * hlb_get_stay_type_percentage( 'fri_sun' ), 2 ),
+                                    );
+                                }
+                                $data_attrs .= " data-hover-prices='" . esc_attr( wp_json_encode( $hover_prices ) ) . "'";
+                            }
+                        }
+
+                        echo '<div class="' . esc_attr( implode( ' ', $classes ) ) . '"' . $data_attrs . '>';
                         echo '<time datetime="' . esc_attr( $date ) . '" class="hlb-day-number">' . esc_html( $day ) . '</time>';
-                        
-                        if ( $price && ! $is_past ) {
-                            echo '<span class="hlb-day-price">' . esc_html( hlb_format_price( $price ) ) . '</span>';
+
+                        // Show weekly rate on start days only
+                        if ( $is_start_day && $tier && ! $is_past && ! $is_booked ) {
+                            $weekly_rate = hlb_get_tier_weekly_rate( $tier );
+                            if ( $weekly_rate && $weekly_rate > 0 ) {
+                                $symbol = hlb_get_option( 'currency_symbol', '£' );
+                                echo '<span class="hlb-day-price">' . esc_html( $symbol . number_format( $weekly_rate, 0 ) ) . '</span>';
+                            }
                         }
-                        
-                        
+
                         echo '</div>';
                     }
-                    
+
                     // Empty cells after last day
                     $last_day_of_week = (int) date( 'w', mktime( 0, 0, 0, $month, $days_in_month, $year ) );
                     for ( $i = $last_day_of_week; $i < 6; $i++ ) {
@@ -193,22 +227,11 @@ class HLB_Calendar_Renderer {
                     ?>
                 </div>
             </div>
-            
+
             <div class="hlb-booking-rules">
-                <?php if ( $is_winter ) : ?>
-                    <p><strong><?php esc_html_e( 'Winter Bookings:', 'holiday-let-booking' ); ?></strong> 
-                    <?php
-                    printf(
-                        esc_html__( 'Nightly stays available. %s cleaning & admin fee applies.', 'holiday-let-booking' ),
-                        hlb_format_price( hlb_get_option( 'cleaning_fee', 150 ) )
-                    );
-                    ?>
-                    </p>
-                <?php else : ?>
-                    <p><strong><?php esc_html_e( 'Summer Bookings:', 'holiday-let-booking' ); ?></strong> 
-                    <?php esc_html_e( '3 nights (Fri-Mon), 4 nights (Mon-Fri), or weekly stays.', 'holiday-let-booking' ); ?>
-                    </p>
-                <?php endif; ?>
+                <p><strong><?php esc_html_e( 'Stay Options:', 'holiday-let-booking' ); ?></strong>
+                <?php esc_html_e( 'Mon-Fri (4 nights), Fri-Mon (3 nights), or Fri-Sun (2 nights). Check in on Mondays or Fridays only.', 'holiday-let-booking' ); ?>
+                </p>
             </div>
         </article>
         <?php
@@ -220,6 +243,10 @@ class HLB_Calendar_Renderer {
     private static function render_legend() {
         ?>
         <div class="hlb-calendar-legend">
+            <div class="hlb-legend-item">
+                <span class="hlb-legend-color hlb-start-day"></span>
+                <span class="hlb-legend-text"><?php esc_html_e( 'Check-in day (Mon/Fri)', 'holiday-let-booking' ); ?></span>
+            </div>
             <div class="hlb-legend-item">
                 <span class="hlb-legend-color hlb-available"></span>
                 <span class="hlb-legend-text"><?php esc_html_e( 'Available', 'holiday-let-booking' ); ?></span>
@@ -237,33 +264,17 @@ class HLB_Calendar_Renderer {
     }
     
     /**
-     * Get pricing for date range
+     * Get tier data for date range
+     * Returns array( date => tier_name )
      */
     private static function get_pricing( $start, $end ) {
-        // Check Google Sheets first
         if ( hlb_get_option( 'enable_google_sheets', false ) ) {
             $sheets = new HLB_Google_Sheets();
-            $pricing = $sheets->get_pricing();
-            if ( ! empty( $pricing ) ) {
-                return $pricing;
+            $tiers = $sheets->get_tiers();
+            if ( ! empty( $tiers ) ) {
+                return $tiers;
             }
         }
-        
-        // Fallback to database
-        global $wpdb;
-        $table = $wpdb->prefix . 'hlb_pricing';
-        
-        $results = $wpdb->get_results( $wpdb->prepare(
-            "SELECT price_date, price FROM {$table} WHERE price_date >= %s AND price_date <= %s AND is_available = 1",
-            $start,
-            $end
-        ), OBJECT_K );
-        
-        $pricing = array();
-        foreach ( $results as $date => $row ) {
-            $pricing[ $date ] = (float) $row->price;
-        }
-        
-        return $pricing;
+        return array();
     }
 }
