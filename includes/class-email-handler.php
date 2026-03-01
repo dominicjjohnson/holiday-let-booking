@@ -52,9 +52,13 @@ class HLB_Email_Handler {
             'From: ' . hlb_get_option( 'from_name', get_bloginfo( 'name' ) ) . ' <' . hlb_get_option( 'from_email', get_option( 'admin_email' ) ) . '>',
         );
         
-        return wp_mail( $guest_email, $subject, $message, $headers );
+        $sent = wp_mail( $guest_email, $subject, $message, $headers );
+        if ( ! $sent ) {
+            error_log( 'HLB Email Error: Failed to send booking confirmation to ' . $guest_email . ' for booking #' . $booking_id );
+        }
+        return $sent;
     }
-    
+
     /**
      * Send notification to admin
      */
@@ -102,7 +106,11 @@ class HLB_Email_Handler {
             'Content-Type: text/html; charset=UTF-8',
         );
         
-        return wp_mail( $admin_email, $subject, $message, $headers );
+        $sent = wp_mail( $admin_email, $subject, $message, $headers );
+        if ( ! $sent ) {
+            error_log( 'HLB Email Error: Failed to send admin notification to ' . $admin_email . ' for booking #' . $booking_id );
+        }
+        return $sent;
     }
     
     /**

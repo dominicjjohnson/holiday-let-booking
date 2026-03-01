@@ -24,12 +24,11 @@ class HLB_Shortcodes {
      * Calendar shortcode
      */
     public static function calendar_shortcode( $atts ) {
-        // Default to next month (so current month is on the left)
-        $next_month = new DateTime( 'first day of next month' );
-        
+        $current_month = new DateTime( 'first day of this month' );
+
         $atts = shortcode_atts( array(
-            'month' => isset( $_GET['month'] ) ? (int) $_GET['month'] : (int) $next_month->format( 'n' ),
-            'year'  => isset( $_GET['year'] ) ? (int) $_GET['year'] : (int) $next_month->format( 'Y' ),
+            'month' => isset( $_GET['hlb_month'] ) ? (int) $_GET['hlb_month'] : (int) $current_month->format( 'n' ),
+            'year'  => isset( $_GET['hlb_year'] ) ? (int) $_GET['hlb_year'] : (int) $current_month->format( 'Y' ),
         ), $atts );
         
         ob_start();

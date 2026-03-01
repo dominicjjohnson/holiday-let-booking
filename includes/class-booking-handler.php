@@ -329,7 +329,7 @@ class HLB_Booking_Handler {
                 date( 'M j, Y', strtotime( $data['check_out'] ) )
             ),
             'post_status' => 'hlb-pending',
-            'post_author' => 1,
+            'post_author' => get_current_user_id() ?: 1,
         ) );
         
         if ( is_wp_error( $post_id ) ) {

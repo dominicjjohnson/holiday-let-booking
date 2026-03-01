@@ -26,9 +26,9 @@ class HLB_Calendar_Renderer {
         
         $num_months = hlb_get_option( 'calendar_months_display', 3 );
         
-        // Calculate months to display (current month first, then next 2 months)
+        // Calculate months to display (current month first, then following months)
         $months = array();
-        for ( $i = 0; $i < 3; $i++ ) {
+        for ( $i = 0; $i < $num_months; $i++ ) {
             $timestamp = mktime( 0, 0, 0, $start_month + $i, 1, $start_year );
             $months[] = array(
                 'month'     => (int) date( 'n', $timestamp ),

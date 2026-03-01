@@ -137,9 +137,9 @@ class Holiday_Let_Booking {
         if ( false === get_option( 'hlb_tier_weekly_rates' ) ) {
             update_option( 'hlb_tier_weekly_rates', array(
                 'low'    => 835,
-                'medium' => 0,
-                'high'   => 0,
-                'peak'   => 0,
+                'medium' => 835,
+                'high'   => 835,
+                'peak'   => 835,
             ) );
         }
         if ( false === get_option( 'hlb_stay_type_percentages' ) ) {
@@ -149,7 +149,7 @@ class Holiday_Let_Booking {
                 'fri_sun' => 60,
             ) );
         }
-        
+
         // Schedule cron jobs
         if ( ! wp_next_scheduled( 'hlb_daily_cleanup' ) ) {
             wp_schedule_event( time(), 'daily', 'hlb_daily_cleanup' );
@@ -182,9 +182,9 @@ class Holiday_Let_Booking {
             if ( false === get_option( 'hlb_tier_weekly_rates' ) ) {
                 update_option( 'hlb_tier_weekly_rates', array(
                     'low'    => 835,
-                    'medium' => 0,
-                    'high'   => 0,
-                    'peak'   => 0,
+                    'medium' => 835,
+                    'high'   => 835,
+                    'peak'   => 835,
                 ) );
             }
             if ( false === get_option( 'hlb_stay_type_percentages' ) ) {
@@ -299,9 +299,9 @@ class Holiday_Let_Booking {
             'hlb_calendar_months_display' => 3,
             'hlb_tier_weekly_rates' => array(
                 'low'    => 835,
-                'medium' => 0,
-                'high'   => 0,
-                'peak'   => 0,
+                'medium' => 835,
+                'high'   => 835,
+                'peak'   => 835,
             ),
             'hlb_stay_type_percentages' => array(
                 'mon_fri' => 60,
@@ -357,9 +357,9 @@ function hlb_get_tier_weekly_rate( $tier ) {
     $tier = hlb_normalize_tier( $tier );
     $rates = hlb_get_option( 'tier_weekly_rates', array(
         'low'    => 835,
-        'medium' => 0,
-        'high'   => 0,
-        'peak'   => 0,
+        'medium' => 835,
+        'high'   => 835,
+        'peak'   => 835,
     ) );
     return isset( $rates[ $tier ] ) ? (float) $rates[ $tier ] : null;
 }

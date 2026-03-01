@@ -143,7 +143,7 @@ class HLB_Google_Sheets {
             $this->api_key
         );
         
-        $response = wp_remote_get( $url, array( 'timeout' => 10 ) );
+        $response = wp_remote_get( $url, array( 'timeout' => 15 ) );
         
         if ( is_wp_error( $response ) ) {
             error_log( 'HLB Google Sheets Error: ' . $response->get_error_message() );

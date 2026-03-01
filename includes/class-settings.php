@@ -21,5 +21,8 @@ class HLB_Settings {
         register_setting( 'hlb_settings', 'hlb_enable_notifications' );
         register_setting( 'hlb_settings', 'hlb_check_in_time' );
         register_setting( 'hlb_settings', 'hlb_check_out_time' );
+        register_setting( 'hlb_settings', 'hlb_tier_weekly_rates' );
+        register_setting( 'hlb_settings', 'hlb_stay_type_percentages' );
+        register_setting( 'hlb_settings', 'hlb_calendar_months_display' );
     }
 }
