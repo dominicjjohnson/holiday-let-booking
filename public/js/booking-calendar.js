@@ -429,6 +429,16 @@ jQuery(document).ready(function($) {
                     $('#hlb-price-summary').slideUp();
                     $('.hlb-calendar-day').removeClass('hlb-selected-start hlb-in-range');
                     hideStayPopover();
+
+                    // Fire Google Ads conversion if configured
+                    if (hlbAjax.conversion_id && typeof gtag === 'function') {
+                        gtag('event', 'conversion', {
+                            'send_to': hlbAjax.conversion_id,
+                            'value': response.data.price ? parseFloat(response.data.price.total) : 0,
+                            'currency': hlbAjax.currency || 'GBP',
+                            'transaction_id': response.data.booking_id ? String(response.data.booking_id) : ''
+                        });
+                    }
                 } else {
                     showMessage(response.data.message, 'error');
                 }

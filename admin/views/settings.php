@@ -8,7 +8,7 @@ if ( isset( $_POST['hlb_save_settings'] ) ) {
         'dog_fee', 'currency_symbol',
         'enable_google_sheets', 'google_api_key', 'google_sheet_id',
         'admin_email', 'from_email', 'from_name', 'enable_notifications',
-        'check_in_time', 'check_out_time'
+        'check_in_time', 'check_out_time', 'conversion_id'
     );
 
     foreach ( $fields as $field ) {
@@ -150,6 +150,17 @@ $stay_pcts = hlb_get_option( 'stay_type_percentages', array( 'mon_fri' => 60, 'f
             <tr>
                 <th><label for="hlb_from_name"><?php _e( 'From Name', 'holiday-let-booking' ); ?></label></th>
                 <td><input type="text" id="hlb_from_name" name="hlb_from_name" value="<?php echo esc_attr( hlb_get_option( 'from_name', get_bloginfo( 'name' ) ) ); ?>" class="regular-text"></td>
+            </tr>
+
+            <tr>
+                <th colspan="2"><h2><?php _e( 'Conversion Tracking', 'holiday-let-booking' ); ?></h2></th>
+            </tr>
+            <tr>
+                <th><label for="hlb_conversion_id"><?php _e( 'Google Ads Conversion ID', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <input type="text" id="hlb_conversion_id" name="hlb_conversion_id" value="<?php echo esc_attr( hlb_get_option( 'conversion_id', '' ) ); ?>" class="large-text" placeholder="AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX">
+                    <p class="description"><?php _e( 'Paste the <code>send_to</code> value from your Google Ads conversion snippet (e.g. <code>AW-881717585/7oLvCO-A84AcENHit6QD</code>). The conversion will fire automatically on successful booking with the actual booking value.', 'holiday-let-booking' ); ?></p>
+                </td>
             </tr>
 
             <tr>

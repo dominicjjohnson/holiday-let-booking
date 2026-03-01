@@ -13,8 +13,10 @@ class HLB_Public {
             wp_enqueue_script( 'hlb-public', HLB_PLUGIN_URL . 'public/js/booking-calendar.js', array( 'jquery' ), HLB_VERSION, true );
             
             wp_localize_script( 'hlb-public', 'hlbAjax', array(
-                'ajaxurl' => admin_url( 'admin-ajax.php' ),
-                'nonce'   => wp_create_nonce( 'hlb_booking_nonce' ),
+                'ajaxurl'       => admin_url( 'admin-ajax.php' ),
+                'nonce'         => wp_create_nonce( 'hlb_booking_nonce' ),
+                'conversion_id' => hlb_get_option( 'conversion_id', '' ),
+                'currency'      => hlb_get_option( 'currency_symbol', '£' ) === '£' ? 'GBP' : hlb_get_option( 'currency_symbol', '£' ),
             ) );
         }
     }

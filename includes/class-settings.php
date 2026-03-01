@@ -24,5 +24,6 @@ class HLB_Settings {
         register_setting( 'hlb_settings', 'hlb_tier_weekly_rates' );
         register_setting( 'hlb_settings', 'hlb_stay_type_percentages' );
         register_setting( 'hlb_settings', 'hlb_calendar_months_display' );
+        register_setting( 'hlb_settings', 'hlb_conversion_id' );
     }
 }
