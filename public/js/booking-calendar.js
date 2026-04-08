@@ -680,11 +680,11 @@ jQuery(document).ready(function($) {
             '}' +
 
             '.hlb-price-summary-header h3 {' +
-            '    margin: 0 0 1.5rem 0;' +
-            '    font-size: 1.5rem;' +
-            '    font-weight: 700;' +
-            '    text-align: center;' +
-            '    color: #ffffff;' +
+            '    margin: 0 0 1.5rem 0 !important;' +
+            '    font-size: 1.5rem !important;' +
+            '    font-weight: 700 !important;' +
+            '    text-align: center !important;' +
+            '    color: #ffffff !important;' +
             '}' +
 
             '.hlb-price-breakdown {' +
