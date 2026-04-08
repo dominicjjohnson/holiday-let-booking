@@ -684,6 +684,7 @@ jQuery(document).ready(function($) {
             '    font-size: 1.5rem;' +
             '    font-weight: 700;' +
             '    text-align: center;' +
+            '    color: #ffffff;' +
             '}' +
 
             '.hlb-price-breakdown {' +
