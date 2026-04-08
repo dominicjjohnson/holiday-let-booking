@@ -733,13 +733,13 @@ jQuery(document).ready(function($) {
             '}' +
 
             '.hlb-booking-total-price {' +
-            '    background: linear-gradient(135deg, #8B6F47 0%, #6B5436 100%);' +
-            '    color: white;' +
-            '    padding: 1rem;' +
-            '    border-radius: 8px;' +
-            '    text-align: center;' +
-            '    font-size: 1.25rem;' +
-            '    margin-bottom: 1rem;' +
+            '    background: linear-gradient(135deg, #8B6F47 0%, #6B5436 100%) !important;' +
+            '    color: white !important;' +
+            '    padding: 1rem !important;' +
+            '    border-radius: 8px !important;' +
+            '    text-align: center !important;' +
+            '    font-size: 1.25rem !important;' +
+            '    margin-bottom: 1rem !important;' +
             '}'
         )
         .appendTo('head');
