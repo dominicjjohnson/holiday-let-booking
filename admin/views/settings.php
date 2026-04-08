@@ -8,7 +8,8 @@ if ( isset( $_POST['hlb_save_settings'] ) ) {
         'dog_fee', 'currency_symbol',
         'enable_google_sheets', 'google_api_key', 'google_sheet_id',
         'admin_email', 'from_email', 'from_name', 'enable_notifications',
-        'check_in_time', 'check_out_time', 'conversion_id'
+        'check_in_time', 'check_out_time', 'conversion_id',
+        'success_message', 'error_message'
     );
 
     foreach ( $fields as $field ) {
@@ -160,6 +161,24 @@ $stay_pcts = hlb_get_option( 'stay_type_percentages', array( 'mon_fri' => 60, 'f
                 <td>
                     <input type="text" id="hlb_conversion_id" name="hlb_conversion_id" value="<?php echo esc_attr( hlb_get_option( 'conversion_id', '' ) ); ?>" class="large-text" placeholder="AW-XXXXXXXXX/XXXXXXXXXXXXXXXXXXXX">
                     <p class="description"><?php _e( 'Paste the <code>send_to</code> value from your Google Ads conversion snippet (e.g. <code>AW-881717585/7oLvCO-A84AcENHit6QD</code>). The conversion will fire automatically on successful booking with the actual booking value.', 'holiday-let-booking' ); ?></p>
+                </td>
+            </tr>
+
+            <tr>
+                <th colspan="2"><h2><?php _e( 'Booking Messages', 'holiday-let-booking' ); ?></h2></th>
+            </tr>
+            <tr>
+                <th><label for="hlb_success_message"><?php _e( 'Success Message', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <input type="text" id="hlb_success_message" name="hlb_success_message" value="<?php echo esc_attr( hlb_get_option( 'success_message', "Booking request received! We'll be in touch within 24 hours." ) ); ?>" class="large-text">
+                    <p class="description"><?php _e( 'Shown to the guest after a successful booking submission.', 'holiday-let-booking' ); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="hlb_error_message"><?php _e( 'General Error Message', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <input type="text" id="hlb_error_message" name="hlb_error_message" value="<?php echo esc_attr( hlb_get_option( 'error_message', 'An error occurred. Please try again.' ) ); ?>" class="large-text">
+                    <p class="description"><?php _e( 'Shown when a generic AJAX error occurs (network failure etc).', 'holiday-let-booking' ); ?></p>
                 </td>
             </tr>
 

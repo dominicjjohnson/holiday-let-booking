@@ -90,7 +90,7 @@ class HLB_Booking_Handler {
         HLB_Email_Handler::send_admin_notification( $booking_id );
         
         wp_send_json_success( array(
-            'message'    => __( 'Booking request received! We\'ll be in touch within 24 hours.', 'holiday-let-booking' ),
+            'message'    => hlb_get_option( 'success_message', __( 'Booking request received! We\'ll be in touch within 24 hours.', 'holiday-let-booking' ) ),
             'booking_id' => $booking_id,
             'price'      => $price_data,
         ) );

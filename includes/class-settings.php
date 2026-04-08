@@ -25,5 +25,7 @@ class HLB_Settings {
         register_setting( 'hlb_settings', 'hlb_stay_type_percentages' );
         register_setting( 'hlb_settings', 'hlb_calendar_months_display' );
         register_setting( 'hlb_settings', 'hlb_conversion_id' );
+        register_setting( 'hlb_settings', 'hlb_success_message' );
+        register_setting( 'hlb_settings', 'hlb_error_message' );
     }
 }

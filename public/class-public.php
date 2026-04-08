@@ -17,6 +17,7 @@ class HLB_Public {
                 'nonce'         => wp_create_nonce( 'hlb_booking_nonce' ),
                 'conversion_id' => hlb_get_option( 'conversion_id', '' ),
                 'currency'      => hlb_get_option( 'currency_symbol', '£' ) === '£' ? 'GBP' : hlb_get_option( 'currency_symbol', '£' ),
+                'error_message' => hlb_get_option( 'error_message', 'An error occurred. Please try again.' ),
             ) );
         }
     }
