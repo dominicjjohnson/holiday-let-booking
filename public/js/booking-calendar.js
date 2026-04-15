@@ -490,7 +490,7 @@ jQuery(document).ready(function($) {
      */
     function navigateToMonth(month, year) {
         var baseUrl = window.location.origin + window.location.pathname;
-        var newUrl = baseUrl + '?hlb_month=' + month + '&hlb_year=' + year;
+        var newUrl = baseUrl + '?hlb_month=' + month + '&hlb_year=' + year + '#booknow';
         window.location.href = newUrl;
     }
 
