@@ -101,6 +101,12 @@ $stay_pcts = hlb_get_option( 'stay_type_percentages', array( 'mon_fri' => 60, 'f
                     <input type="number" name="hlb_stay_type_percentages[fri_sun]" value="<?php echo esc_attr( $stay_pcts['fri_sun'] ?? 60 ); ?>" min="0" max="100" class="small-text">%
                 </td>
             </tr>
+            <tr>
+                <th><label><?php _e( 'Full Week (7 nights)', 'holiday-let-booking' ); ?></label></th>
+                <td>
+                    <input type="number" name="hlb_stay_type_percentages[weekly]" value="<?php echo esc_attr( $stay_pcts['weekly'] ?? 100 ); ?>" min="0" max="200" class="small-text">%
+                </td>
+            </tr>
 
             <tr>
                 <th colspan="2"><h2><?php _e( 'Other Fees', 'holiday-let-booking' ); ?></h2></th>

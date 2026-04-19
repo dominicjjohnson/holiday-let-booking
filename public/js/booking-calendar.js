@@ -469,7 +469,7 @@ jQuery(document).ready(function($) {
      * Month navigation
      */
     function setupMonthNavigation() {
-        $(document).on('click', '.hlb-arrow', function(e) {
+        $(document).on('click', '.hlb-arrow, .hlb-next-period-btn', function(e) {
             e.preventDefault();
             e.stopPropagation();
             var month = $(this).data('month');

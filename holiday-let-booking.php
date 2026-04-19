@@ -3,7 +3,7 @@
  * Plugin Name: Holiday Let Booking Calendar
  * Plugin URI: https://miramedia.co.uk/plugins/holiday-let-booking
  * Description: Complete booking calendar system for holiday lets with seasonal pricing, Google Sheets integration, and email notifications.
- * Version: 2.0.9
+ * Version: 2.1.0
  * Author: Miramedia
  * Author URI: https://miramedia.co.uk
  * License: GPL v2 or later
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'HLB_VERSION', '2.0.9' );
+define( 'HLB_VERSION', '2.1.0' );
 define( 'HLB_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'HLB_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'HLB_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
@@ -147,6 +147,7 @@ class Holiday_Let_Booking {
                 'mon_fri' => 60,
                 'fri_mon' => 65,
                 'fri_sun' => 60,
+                'weekly'  => 100,
             ) );
         }
 
@@ -192,7 +193,15 @@ class Holiday_Let_Booking {
                     'mon_fri' => 60,
                     'fri_mon' => 65,
                     'fri_sun' => 60,
+                    'weekly'  => 100,
                 ) );
+            } else {
+                // Merge weekly into existing percentages if missing
+                $pcts = get_option( 'hlb_stay_type_percentages', array() );
+                if ( ! isset( $pcts['weekly'] ) ) {
+                    $pcts['weekly'] = 100;
+                    update_option( 'hlb_stay_type_percentages', $pcts );
+                }
             }
 
             update_option( 'hlb_version', HLB_VERSION );
@@ -307,6 +316,7 @@ class Holiday_Let_Booking {
                 'mon_fri' => 60,
                 'fri_mon' => 65,
                 'fri_sun' => 60,
+                'weekly'  => 100,
             ),
         );
         
@@ -386,6 +396,7 @@ function hlb_get_stay_type_percentage( $stay_type ) {
         'mon_fri' => 60,
         'fri_mon' => 65,
         'fri_sun' => 60,
+        'weekly'  => 100,
     ) );
     return isset( $percentages[ $stay_type ] ) ? (float) $percentages[ $stay_type ] / 100 : null;
 }
@@ -398,6 +409,7 @@ function hlb_determine_stay_type( $check_in_dow, $nights ) {
     if ( $check_in_dow === 1 && $nights === 4 ) return 'mon_fri';
     if ( $check_in_dow === 5 && $nights === 3 ) return 'fri_mon';
     if ( $check_in_dow === 5 && $nights === 2 ) return 'fri_sun';
+    if ( $nights === 7 && ( $check_in_dow === 1 || $check_in_dow === 5 ) ) return 'weekly';
     return null;
 }
 
@@ -409,6 +421,7 @@ function hlb_get_stay_type_label( $stay_type ) {
         'mon_fri' => 'Mon-Fri (4 nights)',
         'fri_mon' => 'Fri-Mon (3 nights)',
         'fri_sun' => 'Fri-Sun (2 nights)',
+        'weekly'  => 'Full Week (7 nights)',
     );
     return isset( $labels[ $stay_type ] ) ? $labels[ $stay_type ] : $stay_type;
 }

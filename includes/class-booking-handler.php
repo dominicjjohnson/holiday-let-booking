@@ -109,7 +109,7 @@ class HLB_Booking_Handler {
         // Allow stay_type parameter to auto-calculate check-out
         if ( empty( $check_out ) && ! empty( $_POST['stay_type'] ) ) {
             $stay_type = sanitize_text_field( $_POST['stay_type'] );
-            $nights_map = array( 'mon_fri' => 4, 'fri_mon' => 3, 'fri_sun' => 2 );
+            $nights_map = array( 'mon_fri' => 4, 'fri_mon' => 3, 'fri_sun' => 2, 'weekly' => 7 );
             if ( isset( $nights_map[ $stay_type ] ) ) {
                 $check_out = date( 'Y-m-d', strtotime( $check_in . ' +' . $nights_map[ $stay_type ] . ' days' ) );
             }
@@ -158,6 +158,8 @@ class HLB_Booking_Handler {
         $weekly_rate = hlb_get_tier_weekly_rate( $tier );
         $options = array();
 
+        $pct_weekly = hlb_get_stay_type_percentage( 'weekly' );
+
         if ( $day_of_week === 1 ) { // Monday
             $pct = hlb_get_stay_type_percentage( 'mon_fri' );
             $options[] = array(
@@ -166,6 +168,13 @@ class HLB_Booking_Handler {
                 'nights'    => 4,
                 'price'     => round( $weekly_rate * $pct, 2 ),
                 'check_out' => date( 'Y-m-d', strtotime( $check_in . ' +4 days' ) ),
+            );
+            $options[] = array(
+                'stay_type' => 'weekly',
+                'label'     => hlb_get_stay_type_label( 'weekly' ),
+                'nights'    => 7,
+                'price'     => round( $weekly_rate * $pct_weekly, 2 ),
+                'check_out' => date( 'Y-m-d', strtotime( $check_in . ' +7 days' ) ),
             );
         } elseif ( $day_of_week === 5 ) { // Friday
             $pct3 = hlb_get_stay_type_percentage( 'fri_mon' );
@@ -183,6 +192,13 @@ class HLB_Booking_Handler {
                 'nights'    => 2,
                 'price'     => round( $weekly_rate * $pct2, 2 ),
                 'check_out' => date( 'Y-m-d', strtotime( $check_in . ' +2 days' ) ),
+            );
+            $options[] = array(
+                'stay_type' => 'weekly',
+                'label'     => hlb_get_stay_type_label( 'weekly' ),
+                'nights'    => 7,
+                'price'     => round( $weekly_rate * $pct_weekly, 2 ),
+                'check_out' => date( 'Y-m-d', strtotime( $check_in . ' +7 days' ) ),
             );
         }
 
@@ -308,7 +324,7 @@ class HLB_Booking_Handler {
         if ( ! $stay_type ) {
             return new WP_Error(
                 'invalid_stay',
-                __( 'Only the following stay types are available: Mon-Fri (4 nights), Fri-Mon (3 nights), or Fri-Sun (2 nights). Check in on Mondays or Fridays only.', 'holiday-let-booking' )
+                __( 'Only the following stay types are available: Mon-Fri (4 nights), Fri-Mon (3 nights), Fri-Sun (2 nights), or Full Week (7 nights). Check in on Mondays or Fridays only.', 'holiday-let-booking' )
             );
         }
 

@@ -360,8 +360,8 @@
 }
 
 .hlb-calendar-day.hlb-available {
-    background: var(--color-bg);
-    border-color: var(--color-border);
+    background: #e8f5e8;
+    border-color: var(--color-success);
     cursor: pointer;
 }
 
@@ -431,8 +431,8 @@
 }
 
 .hlb-legend-color.hlb-available {
-    background: var(--color-bg);
-    border-color: var(--color-border);
+    background: #e8f5e8;
+    border-color: var(--color-success);
 }
 
 .hlb-legend-color.hlb-booked {
@@ -675,6 +675,38 @@
         font-size: 0.7rem;
         padding: 0.25rem 0;
     }
+}
+
+/* ==================== Next Period Link ==================== */
+.hlb-next-period {
+    text-align: center;
+    margin-top: 2rem;
+    padding: 1rem;
+}
+
+.hlb-next-period-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+    padding: 0.75rem 2rem;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: auto;
+    height: auto;
+    transition: all 0.2s ease;
+}
+
+.hlb-next-period-btn:hover {
+    background: var(--color-primary);
+    color: white;
+    transform: none;
+    box-shadow: var(--shadow-md);
 }
 
 /* ==================== Print Styles ==================== */

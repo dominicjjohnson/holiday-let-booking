@@ -58,6 +58,7 @@ class HLB_Calendar_Renderer {
             </div>
             
             <?php self::render_legend(); ?>
+            <?php self::render_next_period_link( $start_month, $start_year, $num_months ); ?>
         </div>
         <?php
         return ob_get_clean();
@@ -206,16 +207,6 @@ class HLB_Calendar_Renderer {
 
                         echo '<div class="' . esc_attr( implode( ' ', $classes ) ) . '"' . $data_attrs . '>';
                         echo '<time datetime="' . esc_attr( $date ) . '" class="hlb-day-number">' . esc_html( $day ) . '</time>';
-
-                        // Show weekly rate on start days only
-                        if ( $is_start_day && $tier && ! $is_past && ! $is_booked ) {
-                            $weekly_rate = hlb_get_tier_weekly_rate( $tier );
-                            if ( $weekly_rate && $weekly_rate > 0 ) {
-                                $symbol = hlb_get_option( 'currency_symbol', '£' );
-                                echo '<span class="hlb-day-price">' . esc_html( $symbol . number_format( $weekly_rate, 0 ) ) . '</span>';
-                            }
-                        }
-
                         echo '</div>';
                     }
 
@@ -230,7 +221,7 @@ class HLB_Calendar_Renderer {
 
             <div class="hlb-booking-rules">
                 <p><strong><?php esc_html_e( 'Stay Options:', 'holiday-let-booking' ); ?></strong>
-                <?php esc_html_e( 'Mon-Fri (4 nights), Fri-Mon (3 nights), or Fri-Sun (2 nights). Check in on Mondays or Fridays only.', 'holiday-let-booking' ); ?>
+                <?php esc_html_e( 'Mon-Fri (4 nights), Fri-Mon (3 nights), Fri-Sun (2 nights), or Full Week (7 nights). Check in on Mondays or Fridays only.', 'holiday-let-booking' ); ?>
                 </p>
             </div>
         </article>
@@ -263,6 +254,24 @@ class HLB_Calendar_Renderer {
         <?php
     }
     
+    /**
+     * Render "Next N months" navigation link below the legend
+     */
+    private static function render_next_period_link( $start_month, $start_year, $num_months ) {
+        $next_ts    = mktime( 0, 0, 0, $start_month + $num_months, 1, $start_year );
+        $next_month = (int) date( 'n', $next_ts );
+        $next_year  = (int) date( 'Y', $next_ts );
+        ?>
+        <div class="hlb-next-period">
+            <button type="button" class="hlb-next-period-btn"
+                    data-month="<?php echo esc_attr( $next_month ); ?>"
+                    data-year="<?php echo esc_attr( $next_year ); ?>">
+                <?php printf( esc_html__( 'Next %d months', 'holiday-let-booking' ), $num_months ); ?> &rarr;
+            </button>
+        </div>
+        <?php
+    }
+
     /**
      * Get tier data for date range
      * Returns array( date => tier_name )
