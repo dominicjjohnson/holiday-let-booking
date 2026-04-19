@@ -232,11 +232,6 @@ class HLB_Calendar_Renderer {
                 </div>
             </div>
 
-            <div class="hlb-booking-rules">
-                <p><strong><?php esc_html_e( 'Stay Options:', 'holiday-let-booking' ); ?></strong>
-                <?php esc_html_e( 'Mon-Fri (4 nights), Fri-Mon (3 nights), Fri-Sun (2 nights), or Full Week (7 nights). Check in on Mondays or Fridays only.', 'holiday-let-booking' ); ?>
-                </p>
-            </div>
         </article>
         <?php
     }
