@@ -186,11 +186,18 @@ class HLB_Calendar_Renderer {
                             $weekly_rate = hlb_get_tier_weekly_rate( $tier );
                             if ( $weekly_rate && $weekly_rate > 0 ) {
                                 $hover_prices = array();
+                                $pct_weekly = hlb_get_stay_type_percentage( 'weekly' );
                                 if ( $dow === 1 ) {
                                     $hover_prices[] = array(
                                         'label' => hlb_get_stay_type_label( 'mon_fri' ),
                                         'price' => round( $weekly_rate * hlb_get_stay_type_percentage( 'mon_fri' ), 2 ),
                                     );
+                                    if ( $pct_weekly ) {
+                                        $hover_prices[] = array(
+                                            'label' => hlb_get_stay_type_label( 'weekly' ),
+                                            'price' => round( $weekly_rate * $pct_weekly, 2 ),
+                                        );
+                                    }
                                 } elseif ( $dow === 5 ) {
                                     $hover_prices[] = array(
                                         'label' => hlb_get_stay_type_label( 'fri_mon' ),
@@ -200,6 +207,12 @@ class HLB_Calendar_Renderer {
                                         'label' => hlb_get_stay_type_label( 'fri_sun' ),
                                         'price' => round( $weekly_rate * hlb_get_stay_type_percentage( 'fri_sun' ), 2 ),
                                     );
+                                    if ( $pct_weekly ) {
+                                        $hover_prices[] = array(
+                                            'label' => hlb_get_stay_type_label( 'weekly' ),
+                                            'price' => round( $weekly_rate * $pct_weekly, 2 ),
+                                        );
+                                    }
                                 }
                                 $data_attrs .= " data-hover-prices='" . esc_attr( wp_json_encode( $hover_prices ) ) . "'";
                             }
