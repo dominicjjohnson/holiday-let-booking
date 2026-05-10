@@ -84,7 +84,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
             <li><strong><?php _e( 'Check-in:', 'holiday-let-booking' ); ?></strong> <?php echo esc_html( hlb_get_option( 'check_in_time', '15:00' ) ); ?></li>
             <li><strong><?php _e( 'Check-out:', 'holiday-let-booking' ); ?></strong> <?php echo esc_html( hlb_get_option( 'check_out_time', '10:00' ) ); ?></li>
             <li><strong><?php _e( 'Deposit:', 'holiday-let-booking' ); ?></strong> <?php _e( '30% due on booking', 'holiday-let-booking' ); ?></li>
-            <li><strong><?php _e( 'Balance due:', 'holiday-let-booking' ); ?></strong> <?php _e( '60 days from booking', 'holiday-let-booking' ); ?></li>
+            <li><strong><?php _e( 'Balance due:', 'holiday-let-booking' ); ?></strong> <?php _e( '60 days before your holiday', 'holiday-let-booking' ); ?></li>
             <li><strong><?php _e( 'Cancellation:', 'holiday-let-booking' ); ?></strong> <?php _e( 'Full refund if we get another booking or under special circumstances', 'holiday-let-booking' ); ?></li>
             <li><strong><?php _e( 'Dog-friendly:', 'holiday-let-booking' ); ?></strong>
                 <?php printf( __( 'One well-behaved dog welcome (%s fee)', 'holiday-let-booking' ), hlb_format_price( hlb_get_option( 'dog_fee', 35 ) ) ); ?>
