@@ -276,6 +276,7 @@ class HLB_Calendar_Renderer {
                     data-year="<?php echo esc_attr( $next_year ); ?>">
                 <?php printf( esc_html__( 'Next %d months', 'holiday-let-booking' ), $num_months ); ?> &rarr;
             </button>
+            <p class="hlb-contact-message">Feel free to <a href="mailto:owlers@miramedia.co.uk">email me</a> or send me a message on <a href="https://wa.me/447976963754?text=Hi%2C%20I%27m%20interested%20in%20booking%20Owlers%20Retreat%20Camber" target="_blank" rel="noopener noreferrer">WhatsApp</a></p>
         </div>
         <?php
     }

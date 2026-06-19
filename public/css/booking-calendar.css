@@ -708,6 +708,10 @@
     box-shadow: var(--shadow-md);
 }
 
+.hlb-contact-message {
+    margin-top: 1rem;
+}
+
 /* ==================== Print Styles ==================== */
 @media print {
     .hlb-month-navigation,
